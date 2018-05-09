@@ -1,45 +1,64 @@
 package pl.testuj.selenium;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
 import pl.testuj.selenium.pages2.BrokenImagesPage;
+import pl.testuj.selenium.pages2.DynamicControlsPage;
 import pl.testuj.selenium.pages2.EmailSendPage;
 import pl.testuj.selenium.pages2.ResetPasswordPage;
-import pl.testuj.selenium.pages2.MainPage;
+import pl.testuj.selenium.utils.PhotShutter;
 
-public class InternetHerokuPageTest {
+import java.util.ArrayList;
 
-    private WebDriver driver = new ChromeDriver();
-
-    @BeforeEach
-    public void init() {
-        System.setProperty("webdriver.chrome.driver", "chromedriver");
-        driver.get("http://the-internet.herokuapp.com");
-    }
+public class InternetHerokuPageTest extends BaseTest {
 
     @Test
     public void shouldGoToBrokenImagesPage() {
-        MainPage main = new MainPage(driver);
-        BrokenImagesPage broken = main.openBrokenImagesPage();
+        BrokenImagesPage broken = mainPage.openBrokenImagesPage();
         Assertions.assertTrue(broken.isPageDisplayed());
     }
 
     @Test
     public void shouldResetPassword() {
-        MainPage main = new MainPage(driver);
-        ResetPasswordPage forgot = main.openResetPasswordPage();
+        ResetPasswordPage forgot = mainPage.openResetPasswordPage();
         EmailSendPage successPage = forgot.resetPassword("test@test.com");
         Assertions.assertTrue(successPage.isSuccess());
     }
 
     @Test
     public void shouldResetPasswordAlternative() {
-        Assertions.assertTrue(new MainPage(driver)
+        Assertions.assertTrue(mainPage
                 .openResetPasswordPage()
                 .resetPassword("test@test.com")
                 .isSuccess());
+    }
+
+    @Test
+    public void shouldToggleCheckbox() {
+        DynamicControlsPage controls = mainPage.openDynamicControlsLink();
+        controls.hideCheckboxAndWait();
+        PhotShutter.takePhoto();
+        controls.showCheckboxAndWait();
+    }
+
+    @Test
+    public void shouldToggleCheckboxAlternative() {
+        mainPage.openDynamicControlsLink()
+                .hideCheckboxAndWait()
+                .showCheckboxAndWait();
+    }
+
+    @Test
+    public void shouldSwitchTabs() throws Exception {
+        mainPage.openDynamicControllInNewTab();
+        ArrayList<String> tabs = new ArrayList<>(driver.getWindowHandles());
+        driver.switchTo().window(tabs.get(1));
+
+        //Czekamy 3 sekundy aby zobaczyc akcje na ekranie
+        //DO NOT USE IT IN USUAL TEST
+        Thread.sleep(2000);
+
+        driver.close();
+        driver.switchTo().window(tabs.get(0));
     }
 }
